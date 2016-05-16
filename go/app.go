@@ -43,7 +43,6 @@ func init() {
 			"name":     user.GaeObject.UserName, //
 			"created":  user.GaeObject.Created,  //
 			"logined":  user.GaeObject.Logined,  //
-			"loginid":  user.GaeObject.LoginId,  //
 			"mail":     user.GaeObject.Mail,     //
 			"passHash": user.GaeObject.PassHash, //
 			"meicon":   user.GaeObject.MeIcon,   //
@@ -89,7 +88,6 @@ func init() {
 			"user_name":    user.GaeObject.UserName,
 			"user_created": user.GaeObject.Created,
 			"user_logined": user.GaeObject.Logined,
-			"user_loginid": user.GaeObject.LoginId,
 		})
 	})
 
