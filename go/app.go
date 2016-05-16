@@ -19,36 +19,21 @@ func init() {
 		fmt.Fprint(w, "Hello World!!")
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
-		user := gaeuser.NewUser(ctx, data["name"].(string))
-		err := user.Regist(ctx, data["pass"].(string), data["mail"].(string))
+		userManager := gaeuser.NewUserManager()
+		user, err := userManager.Regist(ctx, data["name"].(string), data["pass"].(string), data["mail"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
 		}
 		//
-		Response(w, map[string]interface{}{"r": "ok", "s": "good"})
-	})
-
-	http.HandleFunc("/user/updateMail", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello World!!")
-		ctx := appengine.NewContext(r)
-		data := GetParam(r)
-		user := gaeuser.NewUser(ctx, data["name"].(string))
-		err := user.UpdateMail(ctx, data["mail"].(string))
-		if err != nil {
-			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
-			return
-		}
-		//
-		Response(w, map[string]interface{}{"r": "ok", "s": "good"})
+		Response(w, map[string]interface{}{"r": "ok", "s": "good", "p": user.GaeObject.UserName})
 	})
 
 	http.HandleFunc("/user/get", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello World!!")
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
-		user := gaeuser.NewUser(ctx, data["name"].(string))
-		err := user.PullFromDB(ctx)
+		userMana := gaeuser.NewUserManager()
+		user, err := userMana.GetFromUserName(ctx, data["name"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
@@ -64,6 +49,20 @@ func init() {
 			"passHash": user.GaeObject.PassHash, //
 			"meicon":   user.GaeObject.MeIcon,   //
 		})
+	})
+
+	http.HandleFunc("/user/updateMail", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, "Hello World!!")
+		ctx := appengine.NewContext(r)
+		data := GetParam(r)
+		userMana := gaeuser.NewUserManager()
+		_, _, err := userMana.UpdateMail(ctx, data["name"].(string), data["mail"].(string))
+		if err != nil {
+			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
+			return
+		}
+		//
+		Response(w, map[string]interface{}{"r": "ok", "s": "good"})
 	})
 
 	http.HandleFunc("/user/mail/getUser", func(w http.ResponseWriter, r *http.Request) {
@@ -85,12 +84,64 @@ func init() {
 
 		//
 		Response(w, map[string]interface{}{"r": "ok", "s": "good",
-			"mail_mail":    mail.GaeObject.Mail,     //
+			"mail_mail":    mail.GaeObject.ItemName, //
 			"mail_name":    mail.GaeObject.UserName, //
 			"user_name":    user.GaeObject.UserName,
 			"user_created": user.GaeObject.Created,
 			"user_logined": user.GaeObject.Logined,
 			"user_loginid": user.GaeObject.LoginId,
+		})
+	})
+
+	http.HandleFunc("/user/login", func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		data := GetParam(r)
+
+		userMana := gaeuser.NewUserManager()
+		loginId, user, err := userMana.Login(ctx, data["name"].(string), data["pass"].(string))
+		if err != nil {
+			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
+			return
+		}
+
+		//
+		Response(w, map[string]interface{}{ //
+			"r": "ok", "s": "good", //
+			"loginId":   loginId, //
+			"user_name": user.GaeObject.UserName,
+		})
+	})
+	http.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		data := GetParam(r)
+
+		userMana := gaeuser.NewUserManager()
+		err := userMana.Logout(ctx, data["name"].(string), data["loginId"].(string))
+		if err != nil {
+			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
+			return
+		}
+
+		//
+		Response(w, map[string]interface{}{ //
+			"r": "ok", "s": "good", //
+		})
+	})
+
+	http.HandleFunc("/user/delete", func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		data := GetParam(r)
+
+		userMana := gaeuser.NewUserManager()
+		err := userMana.Delete(ctx, data["name"].(string), data["pass"].(string))
+		if err != nil {
+			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
+			return
+		}
+
+		//
+		Response(w, map[string]interface{}{ //
+			"r": "ok", "s": "good", //
 		})
 	})
 }
