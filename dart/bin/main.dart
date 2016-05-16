@@ -87,12 +87,14 @@ main(List<String> args) {
             conv.UTF8.encode(conv.JSON.encode({
               "name": "kyoro001", //
               "pass": "asdfasdf", //
-            })));
+            })), header: {
+              "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11"});
         print("## ${i++} ## ${await response.body.getString()}");
         var map = conv.JSON.decode(await response.body.getString());
         loginId = map["loginId"];
         test.expect(true, true);
       }
+
       {
         var builder = new netio.TetSocketBuilderDartIO();
         var client = new http.HttpClient(builder);
@@ -109,7 +111,7 @@ main(List<String> args) {
     });
     //
 
-    test.test("login logout", () async {
+    test.test("delete", () async {
       {
         var builder = new netio.TetSocketBuilderDartIO();
         var client = new http.HttpClient(builder);

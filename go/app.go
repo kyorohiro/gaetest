@@ -65,6 +65,7 @@ func init() {
 	})
 
 	http.HandleFunc("/user/mail/getUser", func(w http.ResponseWriter, r *http.Request) {
+
 		fmt.Fprint(w, "Hello World!!")
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
@@ -93,11 +94,13 @@ func init() {
 	})
 
 	http.HandleFunc("/user/login", func(w http.ResponseWriter, r *http.Request) {
+		r.UserAgent()
+		//r.RemoteAddr
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 
 		userMana := gaeuser.NewUserManager()
-		loginId, user, err := userMana.Login(ctx, data["name"].(string), data["pass"].(string))
+		loginId, user, err := userMana.Login(ctx, data["name"].(string), data["pass"].(string), r.RemoteAddr, r.UserAgent())
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
@@ -108,6 +111,7 @@ func init() {
 			"r": "ok", "s": "good", //
 			"loginId":   loginId, //
 			"user_name": user.GaeObject.UserName,
+			"dev":       r.UserAgent(),
 		})
 	})
 	http.HandleFunc("/user/logout", func(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +119,7 @@ func init() {
 		data := GetParam(r)
 
 		userMana := gaeuser.NewUserManager()
-		err := userMana.Logout(ctx, data["name"].(string), data["loginId"].(string))
+		err := userMana.Logout(ctx, data["name"].(string), data["loginId"].(string), r.RemoteAddr, r.UserAgent())
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
