@@ -6,7 +6,6 @@ import (
 	"gaeuser"
 	"net/http"
 
-	//	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 )
 
@@ -84,7 +83,7 @@ func init() {
 
 		//
 		Response(w, map[string]interface{}{"r": "ok", "s": "good",
-			"mail_mail":    mail.GaeObject.ItemName, //
+			"mail_mail":    mail.GaeObject.Mail,     //
 			"mail_name":    mail.GaeObject.UserName, //
 			"user_name":    user.GaeObject.UserName,
 			"user_created": user.GaeObject.Created,
