@@ -54,7 +54,7 @@ func init() {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 		userMana := gaeuser.NewUserManager()
-		_, _, err := userMana.UpdateMail(ctx, data["name"].(string), data["mail"].(string))
+		_, err := userMana.UpdateMail(ctx, data["name"].(string), data["mail"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
@@ -69,13 +69,8 @@ func init() {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 
-		mail := gaeuser.NewMail(ctx, data["mail"].(string))
-		err := mail.PullFromDB(ctx)
-		if err != nil {
-			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
-			return
-		}
-		user, err1 := mail.GetUser(ctx)
+		userMana := gaeuser.NewUserManager()
+		user, err1 := userMana.GetFromMail(ctx, data["mail"].(string))
 		if err1 != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err1.Error()})
 			return
@@ -83,8 +78,7 @@ func init() {
 
 		//
 		Response(w, map[string]interface{}{"r": "ok", "s": "good",
-			"mail_mail":    mail.GaeObject.Mail,     //
-			"mail_name":    mail.GaeObject.UserName, //
+			"mail_mail":    user.GaeObject.Mail, //
 			"user_name":    user.GaeObject.UserName,
 			"user_created": user.GaeObject.Created,
 			"user_logined": user.GaeObject.Logined,
