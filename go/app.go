@@ -18,7 +18,7 @@ func init() {
 		fmt.Fprint(w, "Hello World!!")
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
-		userManager := gaeuser.NewUserManager()
+		userManager := gaeuser.NewUserManager("testuser", "testloginid")
 		user, err := userManager.Regist(ctx, data["name"].(string), data["pass"].(string), data["mail"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
@@ -31,7 +31,7 @@ func init() {
 	http.HandleFunc("/user/get", func(w http.ResponseWriter, r *http.Request) {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
-		userMana := gaeuser.NewUserManager()
+		userMana := gaeuser.NewUserManager("testuser", "testloginid")
 		user, err := userMana.GetFromUserName(ctx, data["name"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
@@ -53,7 +53,7 @@ func init() {
 		fmt.Fprint(w, "Hello World!!")
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
-		userMana := gaeuser.NewUserManager()
+		userMana := gaeuser.NewUserManager("testuser", "testloginid")
 		_, err := userMana.UpdateMail(ctx, data["name"].(string), data["mail"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
@@ -69,7 +69,7 @@ func init() {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 
-		userMana := gaeuser.NewUserManager()
+		userMana := gaeuser.NewUserManager("testuser", "testloginid")
 		user, err1 := userMana.GetFromMail(ctx, data["mail"].(string))
 		if err1 != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err1.Error()})
@@ -91,7 +91,7 @@ func init() {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 
-		userMana := gaeuser.NewUserManager()
+		userMana := gaeuser.NewUserManager("testuser", "testloginid")
 		loginId, user, err := userMana.Login(ctx, data["name"].(string), data["pass"].(string), r.RemoteAddr, r.UserAgent())
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
@@ -110,7 +110,7 @@ func init() {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 
-		userMana := gaeuser.NewUserManager()
+		userMana := gaeuser.NewUserManager("testuser", "testloginid")
 		err := userMana.Logout(ctx, data["name"].(string), data["loginId"].(string), r.RemoteAddr, r.UserAgent())
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
@@ -127,7 +127,7 @@ func init() {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 
-		userMana := gaeuser.NewUserManager()
+		userMana := gaeuser.NewUserManager("testuser", "testloginid")
 		err := userMana.Delete(ctx, data["name"].(string), data["pass"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
