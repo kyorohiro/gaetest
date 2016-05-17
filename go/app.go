@@ -124,6 +124,7 @@ func init() {
 	})
 
 	http.HandleFunc("/user/delete", func(w http.ResponseWriter, r *http.Request) {
+
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 
