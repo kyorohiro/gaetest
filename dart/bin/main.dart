@@ -3,6 +3,7 @@ import "package:test/test.dart" as test;
 import "package:tetorica/http.dart" as http;
 import "package:tetorica/net_dartio.dart" as netio;
 import "dart:convert" as conv;
+import 'dart:async';
 
 main(List<String> args) {
   print('Hello world! ${args}');
@@ -94,6 +95,20 @@ main(List<String> args) {
         loginId = map["loginId"];
         test.expect(true, true);
       }
+      await new Future.delayed(new Duration(seconds: 4));
+      {
+        var builder = new netio.TetSocketBuilderDartIO();
+        var client = new http.HttpClient(builder);
+        await client.connect(host, port);
+        http.HttpClientResponse response = await client.post(
+            "/user/check",
+            conv.UTF8.encode(conv.JSON.encode({
+              "loginId": loginId, //
+            })), header: {
+              "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11"});
+        print("#>>>>>>>${loginId}<<<>>># ${i++} ## ${await response.body.getString()}");
+        test.expect(true, true);
+      }/*
       {
         var builder = new netio.TetSocketBuilderDartIO();
         var client = new http.HttpClient(builder);
@@ -109,7 +124,7 @@ main(List<String> args) {
         var map = conv.JSON.decode(await response.body.getString());
         loginId = map["loginId"];
         test.expect(true, true);
-      }
+      }*/
       {
         var builder = new netio.TetSocketBuilderDartIO();
         var client = new http.HttpClient(builder);
@@ -119,7 +134,8 @@ main(List<String> args) {
             conv.UTF8.encode(conv.JSON.encode({
               "name": "kyoro001", //
               "loginId": loginId, //
-            })));
+            })), header: {
+              "User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11"});
         print("## ${i++} ## ${await response.body.getString()}");
         test.expect(true, true);
       }

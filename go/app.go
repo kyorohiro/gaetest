@@ -3,8 +3,11 @@ package hello
 import (
 	"encoding/json"
 	"fmt"
-	"gaeuser"
 	"net/http"
+	"umiuni2d_backend/twitter"
+	"umiuni2d_backend/user"
+
+	"google.golang.org/appengine/log"
 
 	"google.golang.org/appengine"
 )
@@ -19,20 +22,20 @@ func init() {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 		userManager := gaeuser.NewUserManager("testuser", "testloginid")
-		user, err := userManager.Regist(ctx, data["name"].(string), data["pass"].(string), data["mail"].(string))
+		user, err := userManager.RegistUser(ctx, data["name"].(string), data["pass"].(string), data["mail"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
 		}
 		//
-		Response(w, map[string]interface{}{"r": "ok", "s": "good", "p": user.GaeObject.UserName})
+		Response(w, map[string]interface{}{"r": "ok", "s": "good", "p": user.GetUserName()})
 	})
 
 	http.HandleFunc("/user/get", func(w http.ResponseWriter, r *http.Request) {
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 		userMana := gaeuser.NewUserManager("testuser", "testloginid")
-		user, err := userMana.GetFromUserName(ctx, data["name"].(string))
+		user, err := userMana.FindUserFromUserName(ctx, data["name"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
@@ -40,21 +43,53 @@ func init() {
 		//
 		Response(w, map[string]interface{}{
 			"r": "ok", "s": "good", //
-			"name":     user.GaeObject.UserName, //
-			"created":  user.GaeObject.Created,  //
-			"logined":  user.GaeObject.Logined,  //
-			"mail":     user.GaeObject.Mail,     //
-			"passHash": user.GaeObject.PassHash, //
-			"meicon":   user.GaeObject.MeIcon,   //
+			"name":     user.GetUserName(), //
+			"created":  user.GetCreated(),  //
+			"logined":  user.GetLogined(),  //
+			"mail":     user.GetMail(),     //
+			"passHash": user.GetPassHash(), //
+			"meicon":   user.GetMeIcon(),   //
 		})
 	})
 
+	http.HandleFunc("/user/check", func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		data := GetParam(r)
+		log.Infof(ctx, "###########---------------/user/check(1a)")
+		userMana := gaeuser.NewUserManager("testuser", "testloginid")
+		log.Infof(ctx, "###########---------------/user/check(1b)")
+
+		isLoginA, _, _ := userMana.CheckLoginId(ctx, data["loginId"].(string), r.RemoteAddr, r.UserAgent())
+		log.Infof(ctx, "###########---------------/user/check(1c)")
+
+		isLoginB, _, _ := userMana.CheckLoginId(ctx, data["loginId"].(string), r.RemoteAddr, r.UserAgent())
+		log.Infof(ctx, "###########---------------/user/check(1d)")
+
+		isLoginC, _, _ := userMana.CheckLoginId(ctx, data["loginId"].(string), r.RemoteAddr, r.UserAgent())
+		log.Infof(ctx, "###########---------------/user/check(2)")
+
+		//
+		Response(w, map[string]interface{}{
+			"r": "ok", "s": "good", //
+			"loginA": isLoginA, //
+			"loginB": isLoginB, //
+			"loginC": isLoginC, //
+		})
+	})
 	http.HandleFunc("/user/updateMail", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "Hello World!!")
 		ctx := appengine.NewContext(r)
 		data := GetParam(r)
 		userMana := gaeuser.NewUserManager("testuser", "testloginid")
-		_, err := userMana.UpdateMail(ctx, data["name"].(string), data["mail"].(string))
+		userObj, err := userMana.FindUserFromUserName(ctx, data["name"].(string)) //UpdateMail(ctx, data["name"].(string), data["mail"].(string))
+
+		if err != nil {
+			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
+			return
+		}
+
+		userObj.SetMail(data["mail"].(string))
+		err = userObj.PushToDB(ctx)
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
@@ -70,7 +105,7 @@ func init() {
 		data := GetParam(r)
 
 		userMana := gaeuser.NewUserManager("testuser", "testloginid")
-		user, err1 := userMana.GetFromMail(ctx, data["mail"].(string))
+		user, err1 := userMana.FindUserFromMail(ctx, data["mail"].(string))
 		if err1 != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err1.Error()})
 			return
@@ -78,10 +113,10 @@ func init() {
 
 		//
 		Response(w, map[string]interface{}{"r": "ok", "s": "good",
-			"mail_mail":    user.GaeObject.Mail, //
-			"user_name":    user.GaeObject.UserName,
-			"user_created": user.GaeObject.Created,
-			"user_logined": user.GaeObject.Logined,
+			"mail_mail":    user.GetMail(), //
+			"user_name":    user.GetUserName(),
+			"user_created": user.GetCreated(),
+			"user_logined": user.GetLogined(),
 		})
 	})
 
@@ -92,7 +127,8 @@ func init() {
 		data := GetParam(r)
 
 		userMana := gaeuser.NewUserManager("testuser", "testloginid")
-		loginId, user, err := userMana.Login(ctx, data["name"].(string), data["pass"].(string), r.RemoteAddr, r.UserAgent())
+		log.Infof(ctx, "##login ")
+		loginId, user, err := userMana.LoginUser(ctx, data["name"].(string), data["pass"].(string), r.RemoteAddr, r.UserAgent())
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
@@ -101,8 +137,8 @@ func init() {
 		//
 		Response(w, map[string]interface{}{ //
 			"r": "ok", "s": "good", //
-			"loginId":   loginId, //
-			"user_name": user.GaeObject.UserName,
+			"loginId":   loginId.GetLoginId(), //
+			"user_name": user.GetUserName(),
 			"dev":       r.UserAgent(),
 		})
 	})
@@ -111,7 +147,8 @@ func init() {
 		data := GetParam(r)
 
 		userMana := gaeuser.NewUserManager("testuser", "testloginid")
-		err := userMana.Logout(ctx, data["name"].(string), data["loginId"].(string), r.RemoteAddr, r.UserAgent())
+		log.Infof(ctx, "##logout "+data["loginId"].(string))
+		err := userMana.LogoutUser(ctx, data["loginId"].(string), r.RemoteAddr, r.UserAgent())
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
@@ -129,7 +166,7 @@ func init() {
 		data := GetParam(r)
 
 		userMana := gaeuser.NewUserManager("testuser", "testloginid")
-		err := userMana.Delete(ctx, data["name"].(string), data["pass"].(string))
+		err := userMana.DeleteUser(ctx, data["name"].(string), data["pass"].(string))
 		if err != nil {
 			Response(w, map[string]interface{}{"r": "ng", "s": err.Error()})
 			return
@@ -138,6 +175,43 @@ func init() {
 		//
 		Response(w, map[string]interface{}{ //
 			"r": "ok", "s": "good", //
+		})
+	})
+
+	http.HandleFunc("/twitter", func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		///		data := GetParam(r)
+
+		twitterObj := twitter.NewTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret, "http://127.0.0.1:8080/oauth")
+		url, _, err := twitterObj.SendRequestToken(ctx)
+		if err != nil {
+			Response(w, map[string]interface{}{ //
+				"r": "ng", "s": "good", "dev": err.Error(), //
+			})
+			return
+		}
+		http.Redirect(w, r, url, http.StatusFound)
+
+	})
+
+	http.HandleFunc("/twitter/oauth", func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		log.Infof(ctx, "=======OKK-Z----->")
+		twitterObj := twitter.NewTwitter(consumerKey, consumerSecret, accessToken, accessTokenSecret, callback)
+		_, rt, err := twitterObj.OnCallbackSendRequestToken(ctx, r.URL)
+		if err != nil {
+			Response(w, map[string]interface{}{ //
+				"r": "ng", "s": "good", "dev": err.Error(), //
+			})
+			return
+		}
+		userMana := gaeuser.NewUserManager("testuser", "testloginid")
+		userMana.RegistUserFromTwitter(ctx, rt[twitter.ScreenName], rt[twitter.UserID], rt[twitter.OAuthToken], rt[twitter.OAuthTokenSecret])
+		userMana.LoginUserFromTwitter(ctx, rt[twitter.ScreenName], rt[twitter.UserID], rt[twitter.OAuthToken], rt[twitter.OAuthTokenSecret],
+			r.RemoteAddr, r.UserAgent())
+
+		Response(w, map[string]interface{}{ //
+			"r": "ok", "s": "good",
 		})
 	})
 }
